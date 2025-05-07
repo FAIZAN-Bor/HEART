@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heart</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      margin: 0;
+      overflow: hidden;
+      background: #0f0f1e;
+      color: white;
+      font-family: 'Montserrat', sans-serif;
+      width: 100%;
+      height: 100%;
+      touch-action: manipulation;
+    }
+    
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      z-index: 1;
+    }
+    
+    #ui {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 12px 15px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 20px rgba(255, 100, 150, 0.4);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 95%;
+      gap: 8px;
+    }
+    
+    #ui button, #ui select {
+      margin: 3px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #ff4081, #ff79a0);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      box-shadow: 0 2px 10px rgba(255, 64, 129, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    #ui button:hover, #ui select:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 64, 129, 0.6);
+    }
+    
+    #ui button:active, #ui select:active {
+      transform: translateY(1px);
+    }
+    
+    #ui i {
+      font-size: 16px;
+    }
+    
+    #ui select {
+      appearance: none;
+      padding-right: 25px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: calc(100% - 8px) center;
+    }
+    
+    #message-container {
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      width: 90%;
+      max-width: 500px;
+      transition: opacity 2s ease;
+      opacity: 1;
+      text-align: center;
+    }
+    
+    #message {
+      font-family: 'Dancing Script', cursive;
+      font-size: 2.8rem;
+      color: white;
+      text-shadow: 2px 2px 8px rgba(255, 64, 129, 0.7);
+      padding: 10px;
+      transition: all 0.5s ease;
+    }
+    
+    .hidden {
+      opacity: 0 !important;
+    }
+    
+    #custom-message-box {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 15px;
+      z-index: 100;
+      width: 90%;
+      max-width: 350px;
+      box-shadow: 0 0 30px rgba(255, 64, 129, 0.5);
+      display: none;
+    }
+    
+    #custom-message-box input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ff4081;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-family: 'Montserrat', sans-serif;
+    }
+    
+    #custom-message-box button {
+      padding: 8px 15px;
+      margin: 5px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #ff4081, #ff79a0);
+      color: white;
+      cursor: pointer;
+    }
+    
+    @media (max-width: 600px) {
+      #ui {
+        padding: 10px;
+        bottom: 15px;
+      }
+      
+      #ui button, #ui select {
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+      
+      #message {
+        font-size: 2.2rem;
+      }
+    }
+    
+    #hint {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.8rem;
+      text-align: center;
+      z-index: 5;
+      width: 90%;
+      opacity: 0.8;
+    }
+    
+    .falling-heart {
+      position: absolute;
+      z-index: 0;
+      color: rgba(255, 64, 129, 0.3);
+      animation: fall linear forwards;
+      text-shadow: 0 0 10px rgba(255, 64, 129, 0.5);
+    }
+    
+    @keyframes fall {
+      to {
+        transform: translateY(100vh) rotate(360deg);
+      }
+    }
+    
+    .bloom {
+      position: absolute;
+      background: radial-gradient(circle, rgba(255,64,129,0.3) 0%, rgba(255,64,129,0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 2;
+      animation: bloom 1s ease-out forwards;
+      opacity: 0;
+    }
+    
+    @keyframes bloom {
+      0% {
+        transform: scale(0);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  
+  <div id="message-container">
+    <div id="message">My Heart Beats For You</div>
+  </div>
+  
+  <div id="hint">Tap the heart button to make it pulse</div>
+  
+  <div id="ui">
+    <button onclick="heartbeat()" title="Pulse the heart"><i class="fas fa-heart"></i> Heartbeat</button>
+    <button onclick="setCustomMessage()" title="Set custom message"><i class="fas fa-pen"></i> Custom</button>
+    <select onchange="switchTheme(this.value)" title="Change color theme">
+      <option value="default">Pink Love</option>
+      <option value="cool">Ocean Blue</option>
+      <option value="fire">Passionate</option>
+      <option value="pastel">Sweet Pastels</option>
+      <option value="purple">Royal Purple</option>
+    </select>
+    <button onclick="saveImage()" title="Save the current heart as image"><i class="fas fa-camera"></i> Capture</button>
+  </div>
+  
+  <div id="custom-message-box">
+    <input type="text" id="custom-message-input" placeholder="Enter your love message..." maxlength="40">
+    <button onclick="applyCustomMessage()">Apply</button>
+    <button onclick="closeCustomMessageBox()">Cancel</button>
+  </div>
+
+  <audio id="heartbeatAudio" src="https://cdn.pixabay.com/audio/2021/09/23/audio_6e51f95ef7.mp3"></audio>
+  
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const audio = document.getElementById("heartbeatAudio");
+    const messageElement = document.getElementById("message");
+    const messageContainer = document.getElementById("message-container");
+    const hintElement = document.getElementById("hint");
+    
+    let t = 0;
+    let line1 = [], line2 = [], particles = [];
+    let center = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    let theme = "default";
+    let mouseX = 0;
+    let mouseY = 0;
+    let heartbeatActive = false;
+    let messageTimer = null;
+    let showMessages = true; // Always set to true to ensure messages are shown
+    let currentMessageIndex = 0;
+    let isMobile = window.innerWidth <= 768;
+    
+    const loveMessages = [
+      "My Heart Beats For You",
+      "You're My Everything",
+      "Forever Yours",
+      "I Love You",
+      "You Complete Me",
+      "Every Moment With You",
+      "My Love, My Life",
+      "You're My Sunshine",
+      "Always & Forever",
+      "In My Heart Always"
+    ];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      center = { x: canvas.width / 2, y: canvas.height / 2 };
+      isMobile = window.innerWidth <= 768;
+    }
+
+    window.addEventListener("resize", resize);
+    
+    window.addEventListener("mousemove", e => {
+      mouseX = (e.clientX / window.innerWidth - 0.5);
+      mouseY = (e.clientY / window.innerHeight - 0.5);
+    });
+    
+    window.addEventListener("touchmove", e => {
+      if (e.touches.length > 0) {
+        mouseX = (e.touches[0].clientX / window.innerWidth - 0.5);
+        mouseY = (e.touches[0].clientY / window.innerHeight - 0.5);
+      }
+      e.preventDefault();
+    }, { passive: false });
+    
+    window.addEventListener("click", e => {
+      createHeartBloom(e.clientX, e.clientY);
+    });
+    
+    window.addEventListener("touchstart", e => {
+      if (e.touches.length > 0) {
+        createHeartBloom(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    });
+
+    resize();
+
+    function heartFunction(angle, scale = 10) {
+      const x = scale * 16 * Math.pow(Math.sin(angle), 3);
+      const y = -scale * (13 * Math.cos(angle) - 5 * Math.cos(2 * angle)
+        - 2 * Math.cos(3 * angle) - Math.cos(4 * angle));
+      return { x, y };
+    }
+
+    function getThemeColor(i, total, y, which = 1) {
+      const themeColors = {
+        default: { hue: 330, satRange: [80, 100], lightRange: [50, 65] },
+        cool: { hue: 200, satRange: [70, 90], lightRange: [50, 65] },
+        fire: { hue: 20, satRange: [80, 100], lightRange: [50, 70] },
+        pastel: { hue: 300, satRange: [60, 80], lightRange: [60, 75] },
+        purple: { hue: 270, satRange: [70, 90], lightRange: [50, 65] }
+      };
+      
+      const colorTheme = themeColors[theme] || themeColors.default;
+      const hue = (colorTheme.hue + i / total * 60) % 360;
+      const saturation = colorTheme.satRange[0] + Math.sin(i / 20) * (colorTheme.satRange[1] - colorTheme.satRange[0]);
+      const lightness = colorTheme.lightRange[0] + Math.sin(y / 30) * (colorTheme.lightRange[1] - colorTheme.lightRange[0]);
+      return `hsla(${hue}, ${saturation}%, ${lightness}%, ${which === 1 ? 0.8 : 0.5})`;
+    }
+
+    function addParticle(x, y) {
+      if (Math.random() > 0.7) {
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 3 + Math.random() * 5;
+        const speed = 0.5 + Math.random() * 1.5;
+        particles.push({
+          x,
+          y,
+          life: 80 + Math.random() * 40,
+          dx: Math.cos(angle) * speed,
+          dy: Math.sin(angle) * speed,
+          size: 1 + Math.random() * 2
+        });
+      }
+    }
+
+    function drawParticles() {
+      particles = particles.filter(p => p.life > 0);
+      for (let p of particles) {
+        const alpha = p.life / 120;
+        const size = p.size * (1 - (p.life / 120) * 0.5);
+        
+        ctx.beginPath();
+        
+        // Get a color based on the current theme
+        const themeBaseColors = {
+          default: [255, 64, 129],
+          cool: [64, 150, 255],
+          fire: [255, 100, 50],
+          pastel: [255, 150, 220],
+          purple: [180, 100, 255]
+        };
+        
+        const color = themeBaseColors[theme] || themeBaseColors.default;
+        ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`;
+        
+        ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+        ctx.fill();
+        
+        p.x += p.dx;
+        p.y += p.dy;
+        p.life--;
+        p.dy += 0.02; // Add a little gravity
+      }
+    }
+    
+    function createFallingHeart() {
+      if (Math.random() > 0.95) {
+        const heart = document.createElement('div');
+        heart.className = 'falling-heart';
+        heart.innerHTML = '♥';
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.top = '-20px';
+        heart.style.fontSize = (10 + Math.random() * 20) + 'px';
+        heart.style.opacity = 0.2 + Math.random() * 0.3;
+        heart.style.animationDuration = (10 + Math.random() * 15) + 's';
+        document.body.appendChild(heart);
+        
+        // Remove after animation completes
+        setTimeout(() => {
+          heart.remove();
+        }, 25000);
+      }
+    }
+    
+    function createHeartBloom(x, y) {
+      const bloom = document.createElement('div');
+      bloom.className = 'bloom';
+      bloom.style.left = (x - 50) + 'px';
+      bloom.style.top = (y - 50) + 'px';
+      bloom.style.width = '100px';
+      bloom.style.height = '100px';
+      document.body.appendChild(bloom);
+      
+      setTimeout(() => {
+        bloom.remove();
+      }, 1000);
+    }
+    
+    function getScaleFactor() {
+      // Return appropriate scale based on screen size
+      if (window.innerWidth < 400) return 0.6;
+      if (window.innerWidth < 600) return 0.8;
+      return 1;
+    }
+
+    function draw() {
+      ctx.fillStyle = "rgba(15, 15, 30, 0.2)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.translate(center.x, center.y);
+      
+      // Gentle rotation based on mouse position
+      const rotationAmount = mouseX * 0.3;
+      ctx.rotate(rotationAmount);
+      
+      // Scale heart based on device size
+      const baseScale = isMobile ? 8 : 10;
+      const scaleFactor = getScaleFactor();
+      
+      t += 0.015;
+      let pulseEffect = Math.sin(t * 3) * 0.05;
+      let scale = baseScale * scaleFactor * (1 + pulseEffect);
+      
+      // Add extra pulse when heartbeat button is clicked
+      if (heartbeatActive) {
+        scale = baseScale * scaleFactor * 1.15;
+        heartbeatActive = false;
+      }
+
+      // Generate heart points
+      const point = heartFunction(t, scale);
+      line1.push(point);
+      if (line1.length > 300) line1.shift();
+      line2.push(line1[Math.floor(line1.length * 0.7)] || point);
+      if (line2.length > 300) line2.shift();
+      
+      // Add particles
+      addParticle(center.x + point.x, center.y + point.y);
+
+      // Draw the heart trail (main line)
+      for (let i = 0; i < line1.length - 1; i++) {
+        ctx.beginPath();
+        ctx.lineWidth = 2 + Math.sin(i / line1.length * Math.PI) * 2;
+        ctx.strokeStyle = getThemeColor(i, line1.length, line1[i].y);
+        
+        // Draw a curved line for smoother appearance
+        if (i < line1.length - 2) {
+          const xc = (line1[i].x + line1[i + 1].x) / 2;
+          const yc = (line1[i].y + line1[i + 1].y) / 2;
+          ctx.moveTo(line1[i].x, line1[i].y);
+          ctx.quadraticCurveTo(xc, yc, line1[i + 1].x, line1[i + 1].y);
+        } else {
+          ctx.moveTo(line1[i].x, line1[i].y);
+          ctx.lineTo(line1[i + 1].x, line1[i + 1].y);
+        }
+        
+        ctx.stroke();
+      }
+
+      // Draw the secondary heart trail
+      for (let i = 0; i < line2.length - 1; i++) {
+        ctx.beginPath();
+        ctx.lineWidth = 1.5 + Math.sin(i / line2.length * Math.PI);
+        ctx.strokeStyle = getThemeColor(i, line2.length, line2[i].y, 2);
+        
+        if (i < line2.length - 2) {
+          const xc = (line2[i].x + line2[i + 1].x) / 2;
+          const yc = (line2[i].y + line2[i + 1].y) / 2;
+          ctx.moveTo(line2[i].x, line2[i].y);
+          ctx.quadraticCurveTo(xc, yc, line2[i + 1].x, line2[i + 1].y);
+        } else {
+          ctx.moveTo(line2[i].x, line2[i].y);
+          ctx.lineTo(line2[i + 1].x, line2[i + 1].y);
+        }
+        
+        ctx.stroke();
+      }
+
+      ctx.restore();
+      drawParticles();
+      createFallingHeart();
+
+      requestAnimationFrame(draw);
+    }
+
+    function heartbeat() {
+      heartbeatActive = true;
+      audio.currentTime = 0;
+      audio.play();
+      
+      // Show a random message when heartbeat is clicked, always since showMessages is always true
+      messageContainer.classList.remove('hidden');
+      cycleMessage();
+      
+      // Hide hint after first heartbeat
+      hintElement.style.opacity = '0';
+      setTimeout(() => {
+        hintElement.style.display = 'none';
+      }, 1000);
+    }
+
+    function switchTheme(val) {
+      theme = val;
+      
+      // Update UI colors based on theme
+      const themeColors = {
+        default: { primary: '#ff4081', secondary: '#ff79a0' },
+        cool: { primary: '#4096ff', secondary: '#79a0ff' },
+        fire: { primary: '#ff6432', secondary: '#ffa079' },
+        pastel: { primary: '#f59aff', secondary: '#ffc4f2' },
+        purple: { primary: '#b464ff', secondary: '#d79aff' }
+      };
+      
+      const color = themeColors[theme] || themeColors.default;
+      
+      document.querySelectorAll('#ui button, #ui select').forEach(el => {
+        el.style.background = `linear-gradient(135deg, ${color.primary}, ${color.secondary})`;
+        el.style.boxShadow = `0 2px 10px ${color.primary}66`;
+      });
+      
+      document.querySelector('#message').style.textShadow = `2px 2px 8px ${color.primary}b3`;
+      document.querySelector('#custom-message-box').style.boxShadow = `0 0 30px ${color.primary}80`;
+      document.querySelector('#ui').style.boxShadow = `0 0 20px ${color.primary}66`;
+      
+      // Update input border color
+      document.querySelector('#custom-message-input').style.borderColor = color.primary;
+    }
+    
+    function cycleMessage() {
+      clearTimeout(messageTimer);
+      
+      // Fade out, change text, fade in
+      messageElement.style.opacity = 0;
+      
+      setTimeout(() => {
+        currentMessageIndex = (currentMessageIndex + 1) % loveMessages.length;
+        messageElement.textContent = loveMessages[currentMessageIndex];
+        messageElement.style.opacity = 1;
+      }, 500);
+      
+      // Schedule next message change
+      messageTimer = setTimeout(cycleMessage, 5000);
+    }
+    
+    function setCustomMessage() {
+      document.getElementById('custom-message-box').style.display = 'block';
+    }
+    
+    function applyCustomMessage() {
+      const customMessage = document.getElementById('custom-message-input').value.trim();
+      if (customMessage) {
+        loveMessages.push(customMessage);
+        messageElement.textContent = customMessage;
+        currentMessageIndex = loveMessages.length - 1;
+      }
+      closeCustomMessageBox();
+    }
+    
+    function closeCustomMessageBox() {
+      document.getElementById('custom-message-box').style.display = 'none';
+    }
+
+    function saveImage() {
+      // Create a temporary canvas with just the heart
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      // Fill with background
+      tempCtx.fillStyle = "#0f0f1e";
+      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+      
+      // Draw our heart canvas
+      tempCtx.drawImage(canvas, 0, 0);
+      
+      // Add the message
+      tempCtx.font = isMobile ? "30px 'Dancing Script'" : "40px 'Dancing Script'";
+      tempCtx.fillStyle = "white";
+      tempCtx.textAlign = "center";
+      tempCtx.textBaseline = "middle";
+      tempCtx.shadowColor = "rgba(255, 64, 129, 0.7)";
+      tempCtx.shadowBlur = 8;
+      tempCtx.shadowOffsetX = 2;
+      tempCtx.shadowOffsetY = 2;
+      tempCtx.fillText(messageElement.textContent, tempCanvas.width/2, tempCanvas.height/5);
+      
+      // Convert to image and download
+      const link = document.createElement('a');
+      link.download = 'heart-for-you.png';
+      link.href = tempCanvas.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Show a nice bloom effect
+      createHeartBloom(center.x, center.y);
+    }
+
+    // Start animations
+    draw();
+    
+    // Show initial message with delay
+    setTimeout(() => {
+      messageContainer.classList.remove('hidden');
+      cycleMessage();
+    }, 1000);
+    
+    // Auto heartbeat on load
+    setTimeout(heartbeat, 2000);
+  </script>
+</body>
+</html>
+`
